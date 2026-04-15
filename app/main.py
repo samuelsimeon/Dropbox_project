@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from app.db import db
+from app.auth import verify_firebase_token
 
 app = FastAPI()
 
@@ -9,8 +10,11 @@ def home():
 
 @app.get("/test-db")
 def test_db():
-    collections = db.list_collection_names()
     return {
         "message": "MongoDB connection successful",
-        "collections": collections
+        "collections": db.list_collection_names()
     }
+
+@app.get("/test-firebase")
+def test_firebase():
+    return {"message": "Firebase Admin initialized successfully"}

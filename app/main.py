@@ -1,8 +1,11 @@
 from fastapi import FastAPI
 from app.db import db
 from app.auth import verify_firebase_token
+from app.routes.folders import router as folder_router
 
 app = FastAPI()
+
+app.include_router(folder_router)
 
 @app.get("/")
 def home():

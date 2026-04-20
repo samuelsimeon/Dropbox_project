@@ -4,12 +4,12 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig = {
-  apiKey: "PASTE_YOUR_API_KEY",
-  authDomain: "PASTE_YOUR_AUTH_DOMAIN",
-  projectId: "PASTE_YOUR_PROJECT_ID",
-  storageBucket: "PASTE_YOUR_STORAGE_BUCKET",
-  messagingSenderId: "PASTE_YOUR_MESSAGING_SENDER_ID",
-  appId: "PASTE_YOUR_APP_ID"
+  apiKey: "AIzaSyCy2WJWoY0y5IczmhTcS_2l3Kq9cZAHNew",
+  authDomain: "cloud-dropbox-assignment.firebaseapp.com",
+  projectId: "cloud-dropbox-assignment",
+  storageBucket: "cloud-dropbox-assignment.firebasestorage.app",
+  messagingSenderId: "619773314837",
+  appId: "1:619773314837:web:37fd0c7e1472b2657f8b1c"
 };
 
 const app = initializeApp(firebaseConfig);

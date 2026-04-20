@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloud Dropbox</title>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="app-body">
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-icon"><i class="ri-folder-cloud-line"></i></div>
+                <div>
+                    <h2>Cloud Dropbox</h2>
+                    <p>Your storage</p>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <button id="nav-root-btn" class="nav-btn active">
+                    <i class="ri-folder-open-line"></i>
+                    My Files
+                </button>
+
+                <button id="nav-shared-btn" class="nav-btn">
+                    <i class="ri-share-forward-line"></i>
+                    Shared With Me
+                </button>
+            </nav>
+
+            <div class="sidebar-user">
+                <div class="user-chip">
+                    <i class="ri-user-3-line"></i>
+                    <span id="user-email-display">Loading...</span>
+                </div>
+                <button id="logout-btn" class="logout-btn">
+                    <i class="ri-logout-box-r-line"></i>
+                    Logout
+                </button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="topbar">
+                <div>
+                    <h1>File Explorer</h1>
+                    <p id="path-display">Root</p>
+                </div>
+
+                <div class="topbar-actions">
+                    <button id="back-btn" class="secondary-btn">
+                        <i class="ri-arrow-left-line"></i>
+                        Back
+                    </button>
+                    <button id="go-root-btn" class="secondary-btn">
+                        <i class="ri-home-4-line"></i>
+                        Root
+                    </button>
+                    <button id="refresh-btn" class="secondary-btn">
+                        <i class="ri-refresh-line"></i>
+                        Refresh
+                    </button>
+                </div>
+            </header>
+
+            <section class="toolbar-card">
+                <div class="toolbar-grid">
+                    <div class="tool-box">
+                        <h3><i class="ri-folder-add-line"></i> Create Folder</h3>
+                        <input type="text" id="folder-name" placeholder="Folder name">
+                        <button id="create-folder-btn" class="primary-btn">Create Folder</button>
+                    </div>
+
+                    <div class="tool-box">
+                        <h3><i class="ri-upload-cloud-2-line"></i> Upload File</h3>
+                        <input type="file" id="file-input">
+                        <button id="upload-file-btn" class="primary-btn">Upload File</button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="explorer-section" class="explorer-card">
+                <div class="section-title-row">
+                    <h2>Folders</h2>
+                </div>
+                <div id="folders-grid" class="item-grid"></div>
+
+                <div class="section-title-row files-title">
+                    <h2>Files</h2>
+                </div>
+                <div id="files-grid" class="item-grid"></div>
+            </section>
+
+            <section id="shared-section" class="explorer-card hidden">
+                <div class="section-title-row">
+                    <h2>Shared With Me</h2>
+                    <button id="load-shared-btn" class="secondary-btn">
+                        <i class="ri-share-forward-line"></i>
+                        Refresh Shared
+                    </button>
+                </div>
+                <div id="shared-files-grid" class="item-grid"></div>
+            </section>
+
+            <section class="message-card">
+                <h3>System Messages</h3>
+                <pre id="output">Ready</pre>
+            </section>
+        </main>
+    </div>
+
+    <script type="module" src="/static/js/app.js"></script>
+</body>
+</html>

@@ -22,12 +22,41 @@
             <input type="email" id="login-email" placeholder="Email">
             <input type="password" id="login-password" placeholder="Password">
             <button id="login-btn">Login</button>
+            <button id="logout-btn">Logout</button>
         </div>
 
         <div class="card">
             <h2>User Info</h2>
             <button id="get-me-btn">Test /me</button>
             <pre id="output">Not logged in</pre>
+        </div>
+
+        <div class="card">
+            <h2>Directory Manager</h2>
+            <p><strong>Current Folder ID:</strong> <span id="current-folder-id">Root</span></p>
+            <button id="back-btn">Back</button>
+            <button id="go-root-btn">Go To Root</button>
+            <button id="load-directory-btn">Load Directory</button>
+
+            <h3>Create Folder</h3>
+            <input type="text" id="folder-name" placeholder="Folder name">
+            <button id="create-folder-btn">Create Folder</button>
+
+            <h3>Upload File</h3>
+            <input type="file" id="file-input">
+            <button id="upload-file-btn">Upload File</button>
+
+            <h3>Folders</h3>
+            <ul id="folders-list"></ul>
+
+            <h3>Files</h3>
+            <ul id="files-list"></ul>
+        </div>
+
+        <div class="card">
+            <h2>Shared With Me</h2>
+            <button id="load-shared-btn">Load Shared Files</button>
+            <ul id="shared-files-list"></ul>
         </div>
     </div>
 

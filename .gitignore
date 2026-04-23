@@ -2,3 +2,8 @@ venv/
 __pycache__/
 .env
 firebase/serviceAccountKey.json
+.DS_Store
+__blobstorage__/
+__queuestorage__/
+static/.DS_Store
+app/.DS_Store

@@ -2,40 +2,11 @@ from fastapi import APIRouter, HTTPException, Depends
 from app.db import db
 from app.models.folder import FolderCreate
 from app.auth import get_current_user
-from app.storage import container_client
 from datetime import datetime
 from bson import ObjectId
 from bson.errors import InvalidId
 
 router = APIRouter()
-
-
-def permanently_delete_folder_recursive(folder_doc, user_id):
-    folder_id = str(folder_doc["_id"])
-
-    child_folders = list(db.folders.find({
-        "owner_id": user_id,
-        "parent_id": folder_id
-    }))
-
-    for child_folder in child_folders:
-        permanently_delete_folder_recursive(child_folder, user_id)
-
-    files_in_folder = list(db.files.find({
-        "owner_id": user_id,
-        "folder_id": folder_id
-    }))
-
-    for file_doc in files_in_folder:
-        try:
-            blob_client = container_client.get_blob_client(file_doc["blob_name"])
-            blob_client.delete_blob()
-        except Exception:
-            pass
-
-        db.files.delete_one({"_id": file_doc["_id"]})
-
-    db.folders.delete_one({"_id": folder_doc["_id"]})
 
 
 @router.post("/folders")
@@ -136,17 +107,46 @@ def delete_folder(folder_id: str, current_user: dict = Depends(get_current_user)
     user_id = current_user["uid"]
 
     try:
-        folder_doc = db.folders.find_one({
-            "_id": ObjectId(folder_id),
-            "owner_id": user_id,
-            "is_deleted": {"$ne": True}
-        })
+        folder_obj_id = ObjectId(folder_id)
     except InvalidId:
         raise HTTPException(status_code=400, detail="Invalid folder ID")
+
+    folder_doc = db.folders.find_one({
+        "_id": folder_obj_id,
+        "owner_id": user_id,
+        "is_deleted": {"$ne": True}
+    })
 
     if not folder_doc:
         raise HTTPException(status_code=404, detail="Folder not found")
 
-    permanently_delete_folder_recursive(folder_doc, user_id)
+    child_folder = db.folders.find_one({
+        "owner_id": user_id,
+        "parent_id": folder_id,
+        "is_deleted": {"$ne": True}
+    })
 
-    return {"message": "Folder permanently deleted"}
+    if child_folder:
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot delete folder because it contains sub-directories"
+        )
+
+    child_file = db.files.find_one({
+        "owner_id": user_id,
+        "folder_id": folder_id,
+        "is_deleted": {"$ne": True}
+    })
+
+    if child_file:
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot delete folder because it contains files"
+        )
+
+    db.folders.delete_one({
+        "_id": folder_obj_id,
+        "owner_id": user_id
+    })
+
+    return {"message": "Folder deleted successfully"}

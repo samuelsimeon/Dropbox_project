@@ -32,6 +32,11 @@
                         <i class="ri-delete-bin-5-line"></i>
                         <span>Trash</span>
                     </button>
+
+                    <button id="nav-duplicates-btn" class="sidebar-link">
+                        <i class="ri-file-copy-2-line"></i>
+                        <span>Duplicates</span>
+                    </button>
                 </nav>
             </div>
 
@@ -152,6 +157,17 @@
                             </table>
                         </div>
                     </section>
+
+                    <section id="duplicates-section" class="hidden">
+                        <div class="section-header">
+                            <h2>Duplicate Files Across Dropbox</h2>
+                            <button id="load-duplicates-btn" class="secondary-btn small-btn">
+                                <i class="ri-refresh-line"></i>
+                                Refresh Duplicates
+                            </button>
+                        </div>
+                        <div id="duplicates-container"></div>
+                    </section>
                 </section>
 
                 <aside class="preview-panel">
@@ -189,6 +205,6 @@
 
     <div id="toast" class="toast hidden"></div>
 
-    <script type="module" src="/static/js/app.js"></script>
+    <script type="module" src="/static/js/app.js?v=3"></script>
 </body>
 </html>

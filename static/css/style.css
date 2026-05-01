@@ -628,4 +628,48 @@ button {
     .folder-card-grid {
         grid-template-columns: 1fr;
     }
+    .duplicate-row {
+    background: #fff7ed !important;
+}
+
+.duplicate-badge {
+    display: inline-block;
+    margin-left: 10px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #9a3412;
+    background: #fed7aa;
+}
+.duplicate-group-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    box-shadow: var(--shadow);
+    padding: 18px;
+    margin-bottom: 18px;
+}
+
+.duplicate-group-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: #9a3412;
+}
+
+.duplicate-item {
+    padding: 12px 0;
+    border-top: 1px solid var(--border);
+}
+
+.duplicate-item:first-of-type {
+    border-top: none;
+}
+
+.duplicate-path {
+    color: var(--muted);
+    font-size: 14px;
+    margin-top: 4px;
+}
 }

@@ -4,25 +4,31 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { auth } from "/static/js/firebase-config.js";
 
+// Main buttons in the sidebar and top navigation
 const logoutBtn = document.getElementById("logout-btn");
 const navRootBtn = document.getElementById("nav-root-btn");
 const navSharedBtn = document.getElementById("nav-shared-btn");
 const navTrashBtn = document.getElementById("nav-trash-btn");
+const navDuplicatesBtn = document.getElementById("nav-duplicates-btn");
 
 const backBtn = document.getElementById("back-btn");
 const goRootBtn = document.getElementById("go-root-btn");
 const refreshBtn = document.getElementById("refresh-btn");
 
+// Action buttons used for creating folders, uploading files, loading shared files, etc.
 const createFolderBtn = document.getElementById("create-folder-btn");
 const uploadFileBtn = document.getElementById("upload-file-btn");
 const uploadFileBtnSide = document.getElementById("upload-file-btn-side");
 const loadSharedBtn = document.getElementById("load-shared-btn");
+const loadDuplicatesBtn = document.getElementById("load-duplicates-btn");
 const shareFileBtnPanel = document.getElementById("share-file-btn-panel");
 
+// User input fields
 const folderNameInput = document.getElementById("folder-name");
 const fileInput = document.getElementById("file-input");
 const shareEmailInput = document.getElementById("share-email-input");
 
+// UI areas where dynamic information is displayed
 const userEmailDisplay = document.getElementById("user-email-display");
 const pathDisplay = document.getElementById("path-display");
 
@@ -31,20 +37,26 @@ const filesTableBody = document.getElementById("files-table-body");
 const sharedFilesGrid = document.getElementById("shared-files-grid");
 const trashFoldersGrid = document.getElementById("trash-folders-grid");
 const trashFilesTableBody = document.getElementById("trash-files-table-body");
+const duplicatesContainer = document.getElementById("duplicates-container");
 
 const previewContent = document.getElementById("preview-content");
 const toast = document.getElementById("toast");
 
+// Main sections of the dashboard
 const explorerSection = document.getElementById("explorer-section");
 const sharedSection = document.getElementById("shared-section");
 const trashSection = document.getElementById("trash-section");
+const duplicatesSection = document.getElementById("duplicates-section");
 
+// State variables used to track the current logged in user,
+// the current folder, selected file, and folder history
 let currentUser = null;
 let currentFolderId = null;
 let selectedFile = null;
 let folderHistory = [];
 let folderPathNames = ["Root"];
 
+// Shows a temporary toast message to the user
 function showToast(message) {
   if (!toast) return;
   toast.textContent = message;
@@ -54,6 +66,8 @@ function showToast(message) {
   }, 2500);
 }
 
+// Builds the authentication headers needed for protected backend routes
+// using the Firebase ID token of the current logged-in user
 async function authHeaders() {
   if (!currentUser) {
     throw new Error("You must log in first.");
@@ -65,20 +79,25 @@ async function authHeaders() {
   };
 }
 
+// Updates the folder path shown at the top of the page
 function updatePathDisplay() {
   if (pathDisplay) {
     pathDisplay.textContent = folderPathNames.join(" > ");
   }
 }
 
+// Controls which main section is visible on the dashboard
+// and updates the active sidebar button
 function setActiveView(view) {
   navRootBtn?.classList.remove("active");
   navSharedBtn?.classList.remove("active");
   navTrashBtn?.classList.remove("active");
+  navDuplicatesBtn?.classList.remove("active");
 
   explorerSection?.classList.add("hidden");
   sharedSection?.classList.add("hidden");
   trashSection?.classList.add("hidden");
+  duplicatesSection?.classList.add("hidden");
 
   if (view === "root") {
     navRootBtn?.classList.add("active");
@@ -89,9 +108,13 @@ function setActiveView(view) {
   } else if (view === "trash") {
     navTrashBtn?.classList.add("active");
     trashSection?.classList.remove("hidden");
+  } else if (view === "duplicates") {
+    navDuplicatesBtn?.classList.add("active");
+    duplicatesSection?.classList.remove("hidden");
   }
 }
 
+// Clears the file preview area when nothing is selected
 function clearPreview() {
   selectedFile = null;
   if (!previewContent) return;
@@ -104,6 +127,7 @@ function clearPreview() {
   `;
 }
 
+// Displays metadata about the selected file in the preview panel
 function showFilePreview(file) {
   selectedFile = file;
   if (!previewContent) return;
@@ -114,11 +138,14 @@ function showFilePreview(file) {
       <div class="preview-file-name">${file.filename}</div>
       <div class="preview-file-meta">Size: ${file.size} bytes</div>
       <div class="preview-file-meta">Type: ${file.content_type || "Unknown"}</div>
+      <div class="preview-file-meta">Hash: ${file.file_hash || "Not available"}</div>
+      <div class="preview-file-meta">Path: ${file.path || "Current folder"}</div>
       <div class="preview-file-meta">File ID: ${file._id}</div>
     </div>
   `;
 }
 
+// Renders the folders returned from the backend into folder cards
 function renderFolders(folders) {
   if (!foldersGrid) return;
   foldersGrid.innerHTML = "";
@@ -149,6 +176,7 @@ function renderFolders(folders) {
     foldersGrid.appendChild(card);
   });
 
+  // Open folder button updates current folder state and reloads the directory
   document.querySelectorAll(".open-folder-btn").forEach((btn) => {
     btn.addEventListener("click", async (e) => {
       const folderId = e.currentTarget.dataset.folderId;
@@ -168,13 +196,14 @@ function renderFolders(folders) {
     });
   });
 
+  // Delete folder only sends the request. The backend decides if the folder is empty.
   document.querySelectorAll(".delete-folder-btn").forEach((btn) => {
     btn.addEventListener("click", async (e) => {
       const folderId = e.currentTarget.dataset.folderId;
       const folderName = e.currentTarget.dataset.folderName;
 
       const confirmed = window.confirm(
-        `Are you sure you want to permanently delete "${folderName}" and everything inside it? This cannot be undone.`
+        `Delete "${folderName}"? This folder can only be deleted if it is empty.`
       );
 
       if (!confirmed) return;
@@ -187,7 +216,7 @@ function renderFolders(folders) {
         });
 
         const data = await response.json();
-        showToast(data.message || "Folder permanently deleted");
+        showToast(data.detail || data.message || "Folder delete result");
 
         if (response.ok) {
           clearPreview();
@@ -200,6 +229,8 @@ function renderFolders(folders) {
   });
 }
 
+// Renders files into the main files table
+// Also highlights duplicates in the current folder
 function renderFiles(files) {
   if (!filesTableBody) return;
   filesTableBody.innerHTML = "";
@@ -215,15 +246,27 @@ function renderFiles(files) {
     return;
   }
 
+  // Count file hashes so duplicates in the same folder can be detected
+  const hashCounts = {};
+  files.forEach((file) => {
+    if (file.file_hash) {
+      hashCounts[file.file_hash] = (hashCounts[file.file_hash] || 0) + 1;
+    }
+  });
+
   files.forEach((file) => {
     const safeFile = JSON.stringify(file).replace(/'/g, "&apos;");
+    const isDuplicate = file.file_hash && hashCounts[file.file_hash] > 1;
 
     const row = document.createElement("tr");
+    row.className = isDuplicate ? "duplicate-row" : "";
+
     row.innerHTML = `
       <td>
         <div class="file-name-cell">
           <span class="file-table-icon"><i class="ri-file-text-line"></i></span>
           <span>${file.filename}</span>
+          ${isDuplicate ? '<span class="duplicate-badge">Duplicate</span>' : ''}
         </div>
       </td>
       <td>${file.content_type || "File"}</td>
@@ -240,6 +283,7 @@ function renderFiles(files) {
     filesTableBody.appendChild(row);
   });
 
+  // Preview selected file
   document.querySelectorAll(".preview-file-btn").forEach((btn) => {
     btn.addEventListener("click", (e) => {
       const file = JSON.parse(e.currentTarget.dataset.file.replace(/&apos;/g, "'"));
@@ -248,6 +292,7 @@ function renderFiles(files) {
     });
   });
 
+  // Select file for sharing
   document.querySelectorAll(".share-file-btn").forEach((btn) => {
     btn.addEventListener("click", (e) => {
       const file = JSON.parse(e.currentTarget.dataset.file.replace(/&apos;/g, "'"));
@@ -257,6 +302,7 @@ function renderFiles(files) {
     });
   });
 
+  // Download file from backend
   document.querySelectorAll(".download-file-btn").forEach((btn) => {
     btn.addEventListener("click", async (e) => {
       const fileId = e.currentTarget.dataset.fileId;
@@ -299,6 +345,7 @@ function renderFiles(files) {
     });
   });
 
+  // Move file to trash instead of deleting it immediately
   document.querySelectorAll(".delete-file-btn").forEach((btn) => {
     btn.addEventListener("click", async (e) => {
       const fileId = e.currentTarget.dataset.fileId;
@@ -331,6 +378,7 @@ function renderFiles(files) {
   });
 }
 
+// Renders files shared with the current user
 function renderSharedFiles(sharedFiles) {
   if (!sharedFilesGrid) return;
   sharedFilesGrid.innerHTML = "";
@@ -417,6 +465,7 @@ function renderSharedFiles(sharedFiles) {
   });
 }
 
+// Renders the trash view with restore and permanent delete options
 function renderTrash(data) {
   if (trashFoldersGrid) trashFoldersGrid.innerHTML = "";
   if (trashFilesTableBody) trashFilesTableBody.innerHTML = "";
@@ -456,6 +505,7 @@ function renderTrash(data) {
     }
   }
 
+  // Restore file from trash
   document.querySelectorAll(".restore-file-btn").forEach((btn) => {
     btn.addEventListener("click", async (e) => {
       const fileId = e.currentTarget.dataset.fileId;
@@ -479,6 +529,7 @@ function renderTrash(data) {
     });
   });
 
+  // Permanently delete file from trash
   document.querySelectorAll(".permanent-delete-file-btn").forEach((btn) => {
     btn.addEventListener("click", async (e) => {
       const fileId = e.currentTarget.dataset.fileId;
@@ -510,6 +561,56 @@ function renderTrash(data) {
   });
 }
 
+// Renders duplicate groups found across the user's entire Dropbox
+function renderDuplicateGroups(groups) {
+  if (!duplicatesContainer) return;
+  duplicatesContainer.innerHTML = "";
+
+  if (!groups.length) {
+    duplicatesContainer.innerHTML = `<div class="empty-state">No duplicates found across your Dropbox.</div>`;
+    return;
+  }
+
+  groups.forEach((group, index) => {
+    const card = document.createElement("div");
+    card.className = "duplicate-group-card";
+
+    const itemsHtml = group.files.map((file) => {
+      const safeFile = JSON.stringify(file).replace(/'/g, "&apos;");
+      return `
+        <div class="duplicate-item">
+          <div class="card-actions" style="justify-content: space-between; align-items: center;">
+            <div>
+              <strong>${file.filename}</strong>
+              <div class="duplicate-path">${file.path}</div>
+            </div>
+            <button class="secondary-btn small-btn preview-duplicate-file-btn" data-file='${safeFile}'>
+              Preview
+            </button>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    card.innerHTML = `
+      <div class="duplicate-group-title">
+        Duplicate Group ${index + 1} (${group.count} files)
+      </div>
+      ${itemsHtml}
+    `;
+
+    duplicatesContainer.appendChild(card);
+  });
+
+  document.querySelectorAll(".preview-duplicate-file-btn").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      const file = JSON.parse(e.currentTarget.dataset.file.replace(/&apos;/g, "'"));
+      showFilePreview(file);
+    });
+  });
+}
+
+// Loads the current folder contents from the backend
 async function loadDirectory() {
   try {
     const headers = await authHeaders();
@@ -532,6 +633,7 @@ async function loadDirectory() {
   }
 }
 
+// Loads files shared with the current user
 async function loadSharedFiles() {
   try {
     const headers = await authHeaders();
@@ -549,6 +651,7 @@ async function loadSharedFiles() {
   }
 }
 
+// Loads deleted files from trash
 async function loadTrash() {
   try {
     const headers = await authHeaders();
@@ -566,6 +669,25 @@ async function loadTrash() {
   }
 }
 
+// Loads duplicate groups from the backend
+async function loadDuplicates() {
+  try {
+    const headers = await authHeaders();
+    const response = await fetch("/duplicates", { headers });
+    const data = await response.json();
+
+    if (!response.ok) {
+      showToast(data.detail || "Failed to load duplicates");
+      return;
+    }
+
+    renderDuplicateGroups(data.duplicate_groups || []);
+  } catch (error) {
+    showToast(error.message);
+  }
+}
+
+// Uploads the selected file to the current folder
 async function handleUpload() {
   const selected = fileInput?.files?.[0];
 
@@ -604,6 +726,7 @@ async function handleUpload() {
   }
 }
 
+// Shares the selected file with another user by email
 async function shareSelectedFile() {
   if (!selectedFile) {
     showToast("Select a file first.");
@@ -644,6 +767,7 @@ async function shareSelectedFile() {
   }
 }
 
+// Logout current user and return to login page
 logoutBtn?.addEventListener("click", async () => {
   try {
     await signOut(auth);
@@ -653,6 +777,7 @@ logoutBtn?.addEventListener("click", async () => {
   }
 });
 
+// Switch between the different dashboard views
 navRootBtn?.addEventListener("click", async () => {
   setActiveView("root");
   await loadDirectory();
@@ -669,6 +794,13 @@ navTrashBtn?.addEventListener("click", async () => {
   await loadTrash();
 });
 
+navDuplicatesBtn?.addEventListener("click", async () => {
+  setActiveView("duplicates");
+  clearPreview();
+  await loadDuplicates();
+});
+
+// Navigate back to the previous folder
 backBtn?.addEventListener("click", async () => {
   if (folderHistory.length === 0) {
     currentFolderId = null;
@@ -685,6 +817,7 @@ backBtn?.addEventListener("click", async () => {
   await loadDirectory();
 });
 
+// Return to root folder
 goRootBtn?.addEventListener("click", async () => {
   currentFolderId = null;
   folderHistory = [];
@@ -695,10 +828,12 @@ goRootBtn?.addEventListener("click", async () => {
   await loadDirectory();
 });
 
+// Refresh current directory view
 refreshBtn?.addEventListener("click", async () => {
   await loadDirectory();
 });
 
+// Create a new folder in the current location
 createFolderBtn?.addEventListener("click", async () => {
   const folderName = folderNameInput?.value?.trim();
 
@@ -736,11 +871,14 @@ createFolderBtn?.addEventListener("click", async () => {
   }
 });
 
+// Connect buttons to their main actions
 uploadFileBtn?.addEventListener("click", handleUpload);
 uploadFileBtnSide?.addEventListener("click", handleUpload);
 loadSharedBtn?.addEventListener("click", loadSharedFiles);
+loadDuplicatesBtn?.addEventListener("click", loadDuplicates);
 shareFileBtnPanel?.addEventListener("click", shareSelectedFile);
 
+// Watches Firebase auth state so only logged-in users can access the app page
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
     window.location.href = "/login";

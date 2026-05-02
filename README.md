@@ -1,4 +1,6 @@
-# Cloud Dropbox Assignment
+# Cloud Assignment 2
+
+GitHub Repo Link:https://github.com/samuelsimeon/Dropbox_project
 
 A simplified Dropbox-style cloud storage web application built with **FastAPI**, **MongoDB Atlas**, **Firebase Authentication**, and **Azurite**.
 
@@ -105,8 +107,9 @@ Make sure:
 Then start the FastAPI server:
 
 ```bash
-python -m uvicorn app.main:app --reload --reload-dir app
+./venv/bin/python3 -m uvicorn app.main:app --reload --reload-dir app
 ```
+If the normal python3 command points to the wrong interpreter, using ./venv/bin/python3 ensures the application runs with the correct virtual environment.
 
 Open the app in the browser at:
 
